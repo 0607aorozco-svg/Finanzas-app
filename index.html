@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio Pro de Finanzas - Inventarios Perpetuos</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-xl font-bold flex items-center gap-2">
+                    <i data-lucide="calculator" class="text-indigo-400"></i> Laboratorio Integral de Finanzas y Contabilidad
+                </h1>
+                <p class="text-slate-400 text-xs mt-0.5">Inventarios Perpetuos • Esquemas de Mayor • Balanza • Estados Financieros</p>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-800 p-1.5 rounded-lg border border-slate-700 flex-wrap justify-center">
+                <button onclick="switchMode('estudio')" id="mode-estudio-btn" class="px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1">
+                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i> Estudio
+                </button>
+                <button onclick="switchMode('practica1')" id="mode-practica1-btn" class="px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-300 hover:text-white flex items-center gap-1">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Práctica 1 (T Fijas)
+                </button>
+                <button onclick="switchMode('practica2')" id="mode-practica2-btn" class="px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-300 hover:text-white flex items-center gap-1">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Práctica 2 (Crear T Libre)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Sidebar: Solo Niveles de Ejercicio -->
+        <aside class="lg:col-span-1 space-y-4">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+                    <span>Niveles de Ejercicio</span>
+                    <span id="current-mode-label" class="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">Estudio</span>
+                </h2>
+                <div class="space-y-2" id="exercise-list"></div>
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <section class="lg:col-span-3 space-y-6">
+            <!-- Pestañas de Navegación -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex flex-wrap gap-2">
+                <button onclick="switchTab('enunciado')" id="tab-enunciado" class="flex-1 min-w-[100px] py-2 px-3 text-xs font-medium rounded-lg transition-colors bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-1.5">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Planteamiento
+                </button>
+                <button onclick="switchTab('esquemas')" id="tab-esquemas" class="flex-1 min-w-[100px] py-2 px-3 text-xs font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center justify-center gap-1.5">
+                    <i data-lucide="grid" class="w-3.5 h-3.5"></i> Cuentas T
+                </button>
+                <button onclick="switchTab('balanza')" id="tab-balanza" class="flex-1 min-w-[100px] py-2 px-3 text-xs font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center justify-center gap-1.5">
+                    <i data-lucide="scale" class="w-3.5 h-3.5"></i> Balanza
+                </button>
+                <button onclick="switchTab('resultados')" id="tab-resultados" class="flex-1 min-w-[100px] py-2 px-3 text-xs font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center justify-center gap-1.5">
+                    <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> E. Resultados
+                </button>
+                <button onclick="switchTab('balance')" id="tab-balance" class="flex-1 min-w-[100px] py-2 px-3 text-xs font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center justify-center gap-1.5">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Balance General
+                </button>
+            </div>
+
+            <!-- Vista 1: Planteamiento -->
+            <div id="view-enunciado" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
+                        <div>
+                            <span id="ex-level-tag" class="text-xs px-2.5 py-1 rounded font-bold uppercase tracking-wider"></span>
+                            <h2 id="ex-title" class="text-xl font-bold text-slate-900 mt-2"></h2>
+                            <p id="ex-subtitle" class="text-sm text-slate-500 mt-1"></p>
+                        </div>
+                        <div id="practice-banner-hint" class="hidden bg-amber-50 border border-amber-200 text-amber-900 p-3 rounded-lg text-xs max-w-xs">
+                            <strong class="block font-bold mb-1">Modo Práctica Activo:</strong> Rellena las cuentas T, la balanza y los estados financieros. Tu progreso se guarda automáticamente.
+                        </div>
+                    </div>
+                    <hr class="border-slate-100 my-4">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Operaciones Financieras del Periodo</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+                                    <th class="p-3 w-12">#</th>
+                                    <th class="p-3">Detalle de la Operación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ex-operations" class="divide-y divide-slate-100 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN DE APUNTES TEÓRICOS (Solo visible en Modo Estudio) -->
+                <div id="study-notes-section" class="space-y-4">
+                    <div class="flex items-center gap-2 pb-2 border-b border-slate-200 mt-8">
+                        <i data-lucide="book-open" class="text-indigo-600 w-5 h-5"></i>
+                        <h3 class="font-bold text-slate-900 text-base">Apuntes y Reglas Contables para el Examen</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-900 text-white rounded-xl p-4 shadow-sm space-y-2 border border-slate-800">
+                            <h4 class="font-bold text-xs flex items-center gap-2 text-indigo-400 uppercase tracking-wide">
+                                <i data-lucide="grid" class="w-4 h-4"></i> Estructura de la Cuenta T
+                            </h4>
+                            <div class="text-[11px] space-y-1.5 text-slate-300 leading-relaxed">
+                                <div class="grid grid-cols-2 text-center font-mono text-[10px] bg-slate-800 p-1.5 rounded border border-slate-700">
+                                    <div class="border-r border-slate-700"><strong>DEBE</strong><br>Cargo / Registro</div>
+                                    <div><strong>HABER</strong><br>Abono / Registro</div>
+                                </div>
+                                <p>• <strong>Activo:</strong> Saldo deudor siempre. Crece a la izquierda (+), disminuye a la derecha (-).</p>
+                                <p>• <strong>Pasivo:</strong> Saldo acreedor siempre. Disminuye a la izquierda, crece a la derecha (+).</p>
+                                <p>• <strong>Capital:</strong> Saldo acreedor normalmente. Incrementa el patrimonio a la derecha (+).</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 text-white rounded-xl p-4 shadow-sm space-y-2 border border-slate-800">
+                            <h4 class="font-bold text-xs flex items-center gap-2 text-indigo-400 uppercase tracking-wide">
+                                <i data-lucide="layers" class="w-4 h-4"></i> Sistema de Inventarios Perpetuos
+                            </h4>
+                            <div class="text-[10px] space-y-2 text-slate-300 leading-relaxed">
+                                <div class="bg-slate-800 p-2 rounded border border-slate-700 space-y-1">
+                                    <p class="font-bold text-indigo-300">1. Almacén:</p>
+                                    <p>• Se carga de inventario inicial y compras.</p>
+                                    <p>• Se abona del costo de ventas. Se maneja <strong>al costo</strong>.</p>
+                                </div>
+                                <div class="bg-slate-800 p-2 rounded border border-slate-700 space-y-1">
+                                    <p class="font-bold text-indigo-300">2. Costo de Ventas:</p>
+                                    <p>• Se carga del costo de ventas; se abona de devoluciones s/ venta. Se maneja <strong>al precio</strong>.</p>
+                                </div>
+                                <div class="bg-slate-800 p-2 rounded border border-slate-700 space-y-1">
+                                    <p class="font-bold text-indigo-300">3. Ventas:</p>
+                                    <p>• Se cargan devoluciones/rebajas s/ venta; se abonan las ventas netas. Se maneja <strong>al precio</strong>.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 text-white rounded-xl p-4 shadow-sm space-y-2 border border-slate-800">
+                            <h4 class="font-bold text-xs flex items-center gap-2 text-indigo-400 uppercase tracking-wide">
+                                <i data-lucide="briefcase" class="w-4 h-4"></i> Gastos de Operación y Financieros
+                            </h4>
+                            <div class="text-[10px] space-y-1.5 text-slate-300 leading-relaxed">
+                                <p>• <strong>No van en el Balance General</strong>, solo en el Estado de Resultados.</p>
+                                <p>• <strong>Gastos de Venta:</strong> Pagos relacionados directamente a la venta de mercancía (almacén y área de ventas). Saldo deudor.</p>
+                                <p>• <strong>Gastos de Administración:</strong> Todos los pagos de oficinas, gerentes, etc. Saldo deudor.</p>
+                                <p>• <strong>Gastos y Productos Financieros:</strong> Descuentos sobre compra/venta e intereses pagados o cobrados.</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-950 text-amber-100 rounded-xl p-4 shadow-sm space-y-2 border border-amber-800">
+                            <h4 class="font-bold text-xs flex items-center gap-2 text-amber-400 uppercase tracking-wide">
+                                <i data-lucide="help-circle" class="w-4 h-4"></i> Otros Gastos y Otros Productos
+                            </h4>
+                            <div class="text-[10px] space-y-2 leading-relaxed">
+                                <div class="bg-amber-900/50 p-2 rounded border border-amber-700/50 space-y-1">
+                                    <p class="font-bold text-amber-300">Otros Productos (Ganancias extraordinarias):</p>
+                                    <p>• Entradas de dinero que <strong>no provienen</strong> de la actividad principal (ej. rentas cobradas por prestar un local, ganancia en venta de activo fijo).</p>
+                                    <p>• <em>Suman</em> a la utilidad antes de impuestos.</p>
+                                </div>
+                                <div class="bg-amber-900/50 p-2 rounded border border-amber-700/50 space-y-1">
+                                    <p class="font-bold text-amber-300">Otros Gastos (Pérdidas extraordinarias):</p>
+                                    <p>• Salidas o pérdidas ajenas a la operación normal (ej. pérdida en venta de mobiliario viejo, siniestros).</p>
+                                    <p>• <em>Restan</em> a la utilidad antes de impuestos.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-900 text-white rounded-xl p-5 shadow-sm space-y-3">
+                        <h4 class="font-bold text-xs flex items-center gap-2 text-indigo-200 uppercase tracking-wide">
+                            <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i> Las 8 Fórmulas del Estado de Resultados[cite: 31]
+                        </h4>
+                        <ol class="text-[11px] space-y-2 text-indigo-100 leading-relaxed grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 list-decimal pl-4">
+                            <li><strong>Ventas Netas</strong> = Ventas totales - Devoluciones y rebajas s/ venta[cite: 31].</li>
+                            <li><strong>Compras Totales</strong> = Compras + Gastos de compra[cite: 31].</li>
+                            <li><strong>Compras Netas</strong> = Compras totales - Devoluciones y rebajas s/ compra[cite: 31].</li>
+                            <li><strong>Total de Mercancías</strong> = Compras netas + Inventario inicial[cite: 31].</li>
+                            <li><strong>Costo de Ventas</strong> = Total de mercancías - Inventario final[cite: 31].</li>
+                            <li><strong>Utilidad o Pérdida Bruta</strong> = Ventas netas - Costo de ventas[cite: 31].</li>
+                            <li><strong>Utilidad o Pérdida de Operación</strong> = Utilidad bruta - Gastos de operación[cite: 31].</li>
+                            <li><strong>Utilidad o Pérdida Neta</strong> = Utilidad de operación - Otros gastos + Otros productos[cite: 31].</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista 2: Esquemas de Mayor -->
+            <div id="view-esquemas" class="hidden space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Esquemas de Mayor (Cuentas T)</h2>
+                            <p class="text-xs text-slate-500">Registro de cargos (Debe) y abonos (Haber).</p>
+                        </div>
+                        <div id="practice2-controls" class="hidden flex items-center gap-2">
+                            <button onclick="addCustomTAccount()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold px-3 py-1.5 rounded-lg border border-indigo-200 flex items-center gap-1 transition-all">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agregar Cuenta T
+                            </button>
+                        </div>
+                    </div>
+                    <div id="t-accounts-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                </div>
+            </div>
+
+            <!-- Vista 3: Balanza de Comprobación -->
+            <div id="view-balanza" class="hidden space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Balanza de Comprobación</h2>
+                            <p class="text-xs text-slate-500">Verificación de igualdad de sumas deudoras y acreedoras.</p>
+                        </div>
+                        <button onclick="checkUserAnswers()" id="btn-check-balanza" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm">
+                            Comprobar Mis Resultados
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+                                    <th class="p-3">Cuenta Contable</th>
+                                    <th class="p-3 text-right">Movimiento Deudor</th>
+                                    <th class="p-3 text-right">Movimiento Acreedor</th>
+                                    <th class="p-3 text-right">Saldo Deudor</th>
+                                    <th class="p-3 text-right">Saldo Acreedor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trial-balance-body" class="divide-y divide-slate-100"></tbody>
+                            <tfoot id="trial-balance-foot" class="bg-slate-50 font-bold border-t-2 border-slate-200"></tfoot>
+                        </table>
+                    </div>
+                    <div id="feedback-result" class="mt-4 hidden p-4 rounded-xl text-center font-bold text-sm"></div>
+                </div>
+            </div>
+
+            <!-- Vista 4: Estado de Resultados -->
+            <div id="view-resultados" class="hidden space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-2xl mx-auto">
+                    <div class="text-center pb-6 border-b border-slate-100">
+                        <h3 class="font-bold text-slate-900 text-lg" id="company-name-res">Empresa S.A.</h3>
+                        <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider">Estado de Resultados Integral</h4>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Método de Inventarios Perpetuos</p>
+                    </div>
+                    <div id="income-statement-body" class="py-4 space-y-3 text-sm"></div>
+                </div>
+            </div>
+
+            <!-- Vista 5: Balance General -->
+            <div id="view-balance" class="hidden space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="text-center pb-6 border-b border-slate-100">
+                        <h3 class="font-bold text-slate-900 text-lg" id="company-name-bal">Empresa S.A.</h3>
+                        <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider">Estado de Situación Financiera (Balance General)</h4>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Estructura Financiera Oficial</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
+                        <div class="space-y-4">
+                            <h5 class="font-bold text-indigo-900 border-b pb-2 text-xs uppercase tracking-wider">Activo</h5>
+                            <div id="balance-activo" class="space-y-3 text-sm"></div>
+                        </div>
+                        <div class="space-y-6">
+                            <div>
+                                <h5 class="font-bold text-indigo-900 border-b pb-2 text-xs uppercase tracking-wider">Pasivo</h5>
+                                <div id="balance-pasivo" class="space-y-3 text-sm pt-2"></div>
+                            </div>
+                            <div>
+                                <h5 class="font-bold text-indigo-900 border-b pb-2 text-xs uppercase tracking-wider">Capital Contable</h5>
+                                <div id="balance-capital" class="space-y-3 text-sm pt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            Simulador de Práctica Avanzada para Examen de Finanzas Empresariales.
+        </div>
+    </footer>
+
+    <script>
+        const exercises = [
+            {
+                id: 1,
+                title: "Nivel Básico: Aportación y Operaciones Iniciales",
+                subtitle: "Caso Thinkiwinki con Caja, Bancos, Almacén, Edificios y Ventas.",
+                level: "Básico",
+                company: "Thinkiwinki S.A. de C.V.",
+                operations: [
+                    "1. La empresa inicia operaciones con aportaciones: Caja $340,000, Bancos $800,000, Almacén $300,000, Edificios $6,000,000, Mobiliario $460,000.",
+                    "2. Vendemos mercancía por $100,000 a crédito. El costo de ventas es del 30%.",
+                    "3. Pagamos publicidad por $30,000 mediante transferencia bancaria.",
+                    "4. Compramos equipo de cómputo por $100,000 a crédito.",
+                    "5. Pagamos servicio eléctrico por $80,000 (60% oficinas, 40% ventas) con transferencia."
+                ],
+                accounts: [
+                    { name: "Caja", type: "Activo", debits: [340000], credits: [] },
+                    { name: "Bancos", type: "Activo", debits: [800000], credits: [30000, 80000] },
+                    { name: "Almacén", type: "Activo", debits: [300000], credits: [30000] },
+                    { name: "Edificios", type: "Activo", debits: [6000000], credits: [] },
+                    { name: "Mobiliario", type: "Activo", debits: [460000], credits: [] },
+                    { name: "Clientes", type: "Activo", debits: [100000], credits: [] },
+                    { name: "Equipo de Cómputo", type: "Activo", debits: [100000], credits: [] },
+                    { name: "Acreedores Diversos", type: "Pasivo", debits: [], credits: [100000] },
+                    { name: "Capital Social", type: "Capital", debits: [], credits: [7700000] },
+                    { name: "Ventas", type: "Resultado", debits: [], credits: [100000] },
+                    { name: "Costo de Ventas", type: "Resultado", debits: [30000], credits: [] },
+                    { name: "Gastos de Venta", type: "Resultado", debits: [32000], credits: [] },
+                    { name: "Gastos de Administración", type: "Resultado", debits: [48000], credits: [] }
+                ],
+                incomeStatement: { ventas: 100000, costoVentas: 30000, gastosOp: 80000, otrosGastos: 0 },
+                balanceSheet: {
+                    activosCirculantes: [
+                        { name: "Caja", amount: 340000 },
+                        { name: "Bancos", amount: 690000 },
+                        { name: "Almacén", amount: 270000 },
+                        { name: "Clientes", amount: 100000 }
+                    ],
+                    activosNoCirculantes: [
+                        { name: "Edificios", amount: 6000000 },
+                        { name: "Mobiliario", amount: 460000 },
+                        { name: "Equipo de Cómputo", amount: 100000 }
+                    ],
+                    pasivosCortoPlazo: [
+                        { name: "Acreedores Diversos", amount: 100000 }
+                    ],
+                    capitalContable: [
+                        { name: "Capital Social", amount: 7700000 },
+                        { name: "Utilidad del Ejercicio", amount: -10000 }
+                    ]
+                }
+            },
+            {
+                id: 2,
+                title: "Nivel Intermedio: Devoluciones, Descuentos y Gastos",
+                subtitle: "Operaciones con descuentos sobre venta, sueldos de personal y rentas.",
+                level: "Intermedio",
+                company: "Thinkiwinki S.A. de C.V. (Intermedio)",
+                operations: [
+                    "1. Inicio de operaciones con Bancos $740,000, Caja $360,000, Edificios $3,700,000, Mobiliario $400,000, Almacén $280,000.",
+                    "2. Vendemos mercancía por $150,000 y nos firman un pagaré.",
+                    "3. Compramos $200,000 de mercancía pagando con cheque y otorgando 3% de descuento por pago contado.",
+                    "4. Pagamos nómina por $300,000 (40% ventas, 60% administración) mediante transferencia.",
+                    "5. Vendemos mercancía por $250,000 a crédito. Costo de ventas 30%."
+                ],
+                accounts: [
+                    { name: "Caja", type: "Activo", debits: [360000], credits: [] },
+                    { name: "Bancos", type: "Activo", debits: [740000], credits: [194000, 300000] },
+                    { name: "Almacén", type: "Activo", debits: [280000, 200000], credits: [75000] },
+                    { name: "Edificios", type: "Activo", debits: [3700000], credits: [] },
+                    { name: "Mobiliario", type: "Activo", debits: [400000], credits: [] },
+                    { name: "Clientes", type: "Activo", debits: [250000], credits: [] },
+                    { name: "Documentos por Cobrar", type: "Activo", debits: [150000], credits: [] },
+                    { name: "Capital Social", type: "Capital", debits: [], credits: [5840000] },
+                    { name: "Ventas", type: "Resultado", debits: [], credits: [400000] },
+                    { name: "Costo de Ventas", type: "Resultado", debits: [120000], credits: [] },
+                    { name: "Gastos de Venta", type: "Resultado", debits: [120000], credits: [] },
+                    { name: "Gastos de Administración", type: "Resultado", debits: [180000], credits: [] }
+                ],
+                incomeStatement: { ventas: 400000, costoVentas: 120000, gastosOp: 300000, otrosGastos: 0 },
+                balanceSheet: {
+                    activosCirculantes: [
+                        { name: "Caja", amount: 360000 },
+                        { name: "Bancos", amount: 246000 },
+                        { name: "Almacén", amount: 405000 },
+                        { name: "Clientes", amount: 250000 },
+                        { name: "Documentos por Cobrar", amount: 150000 }
+                    ],
+                    activosNoCirculantes: [
+                        { name: "Edificios", amount: 3700000 },
+                        { name: "Mobiliario", amount: 400000 }
+                    ],
+                    pasivosCortoPlazo: [],
+                    capitalContable: [
+                        { name: "Capital Social", amount: 5840000 },
+                        { name: "Utilidad del Ejercicio", amount: -20000 }
+                    ]
+                }
+            },
+            {
+                id: 3,
+                title: "Nivel Avanzado: Activo Fijo, Financiamiento e Impuestos",
+                subtitle: "Caso integral con maquinaria, intereses financieros, ISR (30%) y PTU (10%).",
+                level: "Avanzado",
+                company: "Corporativo Thinkiwinki S.A.",
+                operations: [
+                    "1. Aportación de socios: Bancos $2,000,000, Almacén $500,000, Terrenos $2,500,000, Edificios $6,000,000.",
+                    "2. Venta de mercancía por $800,000 más IVA de contado. Costo de ventas 30%.",
+                    "3. Pagamos intereses bancarios (gastos financieros) por $25,000.",
+                    "4. Pagamos gastos de administración por $60,000 con cheque.",
+                    "5. Determinación de impuestos al cierre del ejercicio (ISR 30%, PTU 10%)."
+                ],
+                accounts: [
+                    { name: "Bancos", type: "Activo", debits: [2000000, 928000], credits: [25000, 60000] },
+                    { name: "Almacén", type: "Activo", debits: [500000], credits: [240000] },
+                    { name: "Terrenos", type: "Activo", debits: [2500000], credits: [] },
+                    { name: "Edificios", type: "Activo", debits: [6000000], credits: [] },
+                    { name: "Capital Social", type: "Capital", debits: [], credits: [11000000] },
+                    { name: "Ventas", type: "Resultado", debits: [], credits: [800000] },
+                    { name: "Costo de Ventas", type: "Resultado", debits: [240000], credits: [] },
+                    { name: "Gastos de Administración", type: "Resultado", debits: [60000], credits: [] },
+                    { name: "Gastos Financieros", type: "Resultado", debits: [25000], credits: [] }
+                ],
+                incomeStatement: { ventas: 800000, costoVentas: 240000, gastosOp: 60000, otrosGastos: 25000 },
+                balanceSheet: {
+                    activosCirculantes: [
+                        { name: "Bancos", amount: 2843000 },
+                        { name: "Almacén", amount: 260000 }
+                    ],
+                    activosNoCirculantes: [
+                        { name: "Terrenos", amount: 2500000 },
+                        { name: "Edificios", amount: 6000000 }
+                    ],
+                    pasivosCortoPlazo: [
+                        { name: "Impuestos por Pagar (ISR+PTU)", amount: 189000 }
+                    ],
+                    capitalContable: [
+                        { name: "Capital Social", amount: 11000000 },
+                        { name: "Utilidad Neta", amount: 414000 }
+                    ]
+                }
+            }
+        ];
+
+        let currentExerciseId = 1;
+        let currentTab = 'enunciado';
+        let currentMode = 'estudio';
+        let customAccounts = [];
+
+        function formatMoney(amount) {
+            return '$' + amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // --- SISTEMA DE MEMORIA LOCAL (PERSISTENCIA) ---
+        function saveUserProgress() {
+            const data = {
+                currentExerciseId,
+                currentMode,
+                customAccounts: []
+            };
+            // Guardar inputs de práctica 1
+            const ex = exercises.find(e => e.id === currentExerciseId);
+            if (ex && currentMode === 'practica1') {
+                ex.accounts.forEach((acc, idx) => {
+                    const dInput = document.getElementById(`input-debit-${idx}`);
+                    const cInput = document.getElementById(`input-credit-${idx}`);
+                    if (dInput) acc.savedDebit = parseFloat(dInput.value) || 0;
+                    if (cInput) acc.savedCredit = parseFloat(cInput.value) || 0;
+                });
+            }
+            // Guardar cuentas personalizadas de práctica 2
+            if (currentMode === 'practica2') {
+                document.querySelectorAll('#t-accounts-container > div').forEach((card, idx) => {
+                    const nameInput = card.querySelector('input[type="text"]');
+                    const dInput = card.querySelector(`#custom-debit-${idx}`);
+                    const cInput = card.querySelector(`#custom-credit-${idx}`);
+                    if (nameInput && dInput && cInput) {
+                        data.customAccounts.push({
+                            name: nameInput.value,
+                            debit: parseFloat(dInput.value) || 0,
+                            credit: parseFloat(cInput.value) || 0
+                        });
+                    }
+                });
+                customAccounts = data.customAccounts;
+            }
+            localStorage.setItem('finanzas_progress', JSON.stringify(data));
+        }
+
+        function loadUserProgress() {
+            const saved = localStorage.getItem('finanzas_progress');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.currentExerciseId) currentExerciseId = data.currentExerciseId;
+                    if (data.currentMode) currentMode = data.currentMode;
+                    if (data.customAccounts) customAccounts = data.customAccounts;
+                } catch(e) {}
+            }
+        }
+
+        function switchMode(mode) {
+            saveUserProgress(); // Guardar antes de cambiar
+            currentMode = mode;
+            
+            const estudioBtn = document.getElementById('mode-estudio-btn');
+            const p1Btn = document.getElementById('mode-practica1-btn');
+            const p2Btn = document.getElementById('mode-practica2-btn');
+            const label = document.getElementById('current-mode-label');
+            const hint = document.getElementById('practice-banner-hint');
+            const btnBalanza = document.getElementById('btn-check-balanza');
+            const p2Controls = document.getElementById('practice2-controls');
+            const studyNotes = document.getElementById('study-notes-section');
+
+            [estudioBtn, p1Btn, p2Btn].forEach(b => b.className = "px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-300 hover:text-white flex items-center gap-1");
+
+            if (mode === 'estudio') {
+                estudioBtn.className = "px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1";
+                label.innerText = "Estudio";
+                hint.classList.add('hidden');
+                btnBalanza.classList.add('hidden');
+                p2Controls.classList.add('hidden');
+                studyNotes.classList.remove('hidden');
+            } else if (mode === 'practica1') {
+                p1Btn.className = "px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1";
+                label.innerText = "Práctica 1";
+                hint.classList.remove('hidden');
+                btnBalanza.classList.remove('hidden');
+                p2Controls.classList.add('hidden');
+                studyNotes.classList.add('hidden');
+            } else {
+                p2Btn.className = "px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1";
+                label.innerText = "Práctica 2";
+                hint.classList.remove('hidden');
+                btnBalanza.classList.remove('hidden');
+                p2Controls.classList.remove('hidden');
+                studyNotes.classList.add('hidden');
+                if (customAccounts.length === 0) {
+                    customAccounts = [
+                        { name: "Caja", debit: 0, credit: 0 },
+                        { name: "Bancos", debit: 0, credit: 0 }
+                    ];
+                }
+            }
+            loadCurrentExercise();
+        }
+
+        function renderExerciseList() {
+            const listContainer = document.getElementById('exercise-list');
+            listContainer.innerHTML = '';
+            exercises.forEach(ex => {
+                const isActive = ex.id === currentExerciseId;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-3 rounded-lg text-xs font-medium transition-all flex items-center justify-between ${
+                    isActive ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`;
+                btn.innerHTML = `
+                    <span class="font-semibold">${ex.title.split(':')[0]}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] ${isActive ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-200 text-slate-600'}">${ex.level}</span>
+                `;
+                btn.onclick = () => {
+                    saveUserProgress();
+                    currentExerciseId = ex.id;
+                    renderExerciseList();
+                    loadCurrentExercise();
+                };
+                listContainer.appendChild(btn);
+            });
+        }
+
+        function switchTab(tabName) {
+            saveUserProgress();
+            currentTab = tabName;
+            ['enunciado', 'esquemas', 'balanza', 'resultados', 'balance'].forEach(t => {
+                const view = document.getElementById(`view-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tabName) {
+                    view.classList.remove('hidden');
+                    btn.className = 'flex-1 min-w-[100px] py-2 px-3 text-xs font-medium rounded-lg transition-colors bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-1.5';
+                } else {
+                    view.classList.add('hidden');
+                    btn.className = 'flex-1 min-w-[100px] py-2 px-3 text-xs font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center justify-center gap-1.5';
+                }
+            });
+        }
+
+        function addCustomTAccount() {
+            saveUserProgress();
+            customAccounts.push({ name: "Nueva Cuenta", debit: 0, credit: 0 });
+            loadCurrentExercise();
+        }
+
+        function loadCurrentExercise() {
+            const ex = exercises.find(e => e.id === currentExerciseId);
+            
+            document.getElementById('ex-title').innerText = ex.title;
+            document.getElementById('ex-subtitle').innerText = ex.subtitle;
+            const levelTag = document.getElementById('ex-level-tag');
+            levelTag.innerText = ex.level;
+            levelTag.className = `text-xs px-2.5 py-1 rounded font-bold uppercase tracking-wider ${
+                ex.level === 'Básico' ? 'bg-emerald-100 text-emerald-800' :
+                ex.level === 'Intermedio' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+            }`;
+
+            const opsTable = document.getElementById('ex-operations');
+            opsTable.innerHTML = '';
+            ex.operations.forEach((op, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-400">${index + 1}</td>
+                    <td class="p-3 text-slate-700 text-sm">${op.substring(3)}</td>
+                `;
+                opsTable.appendChild(tr);
+            });
+
+            const tContainer = document.getElementById('t-accounts-container');
+            tContainer.innerHTML = '';
+
+            if (currentMode === 'practica2') {
+                customAccounts.forEach((acc, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-2xs';
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center mb-3 border-b pb-2 gap-2">
+                            <input type="text" value="${acc.name}" oninput="saveUserProgress()" class="w-full font-bold text-slate-800 text-xs bg-white border border-slate-300 rounded p-1">
+                            <button onclick="customAccounts.splice(${idx}, 1); loadCurrentExercise();" class="text-rose-500 hover:text-rose-700 text-xs font-bold px-1">✕</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">CARGOS (DEBE)</label>
+                                <input type="number" id="custom-debit-${idx}" value="${acc.debit}" oninput="saveUserProgress()" class="w-full bg-white border border-slate-300 rounded p-1.5 text-right font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">ABONOS (HABER)</label>
+                                <input type="number" id="custom-credit-${idx}" value="${acc.credit}" oninput="saveUserProgress()" class="w-full bg-white border border-slate-300 rounded p-1.5 text-right font-mono text-xs">
+                            </div>
+                        </div>
+                    `;
+                    tContainer.appendChild(card);
+                });
+            } else {
+                ex.accounts.forEach((acc, idx) => {
+                    const totalDebit = acc.savedDebit !== undefined ? acc.savedDebit : acc.debits.reduce((a, b) => a + b, 0);
+                    const totalCredit = acc.savedCredit !== undefined ? acc.savedCredit : acc.credits.reduce((a, b) => a + b, 0);
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-2xs';
+                    
+                    if (currentMode === 'estudio') {
+                        card.innerHTML = `
+                            <div class="flex justify-between items-center mb-3 border-b pb-2">
+                                <h4 class="font-bold text-slate-800 text-xs">${acc.name}</h4>
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-medium">${acc.type}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-xs font-mono">
+                                <div class="border-r pr-2 space-y-1">
+                                    <div class="text-slate-400 font-bold border-b pb-1 text-center text-[10px]">DEBE</div>
+                                    ${acc.debits.map(d => `<div class="text-right">${formatMoney(d)}</div>`).join('') || '<div class="text-center text-slate-300">-</div>'}
+                                    <div class="pt-2 border-t font-bold text-slate-700 text-right">Suma: ${formatMoney(totalDebit)}</div>
+                                </div>
+                                <div class="pl-2 space-y-1">
+                                    <div class="text-slate-400 font-bold border-b pb-1 text-center text-[10px]">HABER</div>
+                                    ${acc.credits.map(c => `<div class="text-right">${formatMoney(c)}</div>`).join('') || '<div class="text-center text-slate-300">-</div>'}
+                                    <div class="pt-2 border-t font-bold text-slate-700 text-right">Suma: ${formatMoney(totalCredit)}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        card.innerHTML = `
+                            <div class="flex justify-between items-center mb-3 border-b pb-2">
+                                <h4 class="font-bold text-slate-800 text-xs">${acc.name}</h4>
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-medium">Editable</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 mb-1">MOV. DEUDOR</label>
+                                    <input type="number" id="input-debit-${idx}" value="${totalDebit}" oninput="saveUserProgress()" class="w-full bg-white border border-slate-300 rounded p-1.5 text-right font-mono text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 mb-1">MOV. ACREEDOR</label>
+                                    <input type="number" id="input-credit-${idx}" value="${totalCredit}" oninput="saveUserProgress()" class="w-full bg-white border border-slate-300 rounded p-1.5 text-right font-mono text-xs">
+                                </div>
+                            </div>
+                        `;
+                    }
+                    tContainer.appendChild(card);
+                });
+            }
+
+            const tbBody = document.getElementById('trial-balance-body');
+            const tbFoot = document.getElementById('trial-balance-foot');
+            tbBody.innerHTML = '';
+            
+            let sumMovDeudor = 0, sumMovAcreedor = 0, sumSaldoDeudor = 0, sumSaldoAcreedor = 0;
+            const accountsToUse = (currentMode === 'practica2') ? customAccounts.map(a => ({ name: a.name, debits: [a.debit], credits: [a.credit] })) : ex.accounts;
+
+            accountsToUse.forEach((acc, idx) => {
+                const totalDebit = acc.savedDebit !== undefined ? acc.savedDebit : acc.debits.reduce((a, b) => a + (parseFloat(b)||0), 0);
+                const totalCredit = acc.savedCredit !== undefined ? acc.savedCredit : acc.credits.reduce((a, b) => a + (parseFloat(b)||0), 0);
+                let saldoDeudor = (totalDebit >= totalCredit) ? totalDebit - totalCredit : 0;
+                let saldoAcreedor = (totalCredit > totalDebit) ? totalCredit - totalDebit : 0;
+
+                sumMovDeudor += totalDebit;
+                sumMovAcreedor += totalCredit;
+                sumSaldoDeudor += saldoDeudor;
+                sumSaldoAcreedor += saldoAcreedor;
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-slate-800 text-xs">${acc.name}</td>
+                    <td class="p-3 text-right font-mono text-slate-600 text-xs">${formatMoney(totalDebit)}</td>
+                    <td class="p-3 text-right font-mono text-slate-600 text-xs">${formatMoney(totalCredit)}</td>
+                    <td class="p-3 text-right font-mono text-slate-600 text-xs">${saldoDeudor > 0 ? formatMoney(saldoDeudor) : '-'}</td>
+                    <td class="p-3 text-right font-mono text-slate-600 text-xs">${saldoAcreedor > 0 ? formatMoney(saldoAcreedor) : '-'}</td>
+                `;
+                tbBody.appendChild(tr);
+            });
+
+            tbFoot.innerHTML = `
+                <tr>
+                    <td class="p-3 font-bold text-slate-900 text-xs">SUMAS IGUALES</td>
+                    <td class="p-3 text-right font-mono text-xs">${formatMoney(sumMovDeudor)}</td>
+                    <td class="p-3 text-right font-mono text-xs">${formatMoney(sumMovAcreedor)}</td>
+                    <td class="p-3 text-right font-mono text-xs">${formatMoney(sumSaldoDeudor)}</td>
+                    <td class="p-3 text-right font-mono text-xs">${formatMoney(sumSaldoAcreedor)}</td>
+                </tr>
+            `;
+
+            document.getElementById('company-name-res').innerText = ex.company;
+            const resBody = document.getElementById('income-statement-body');
+            const is = ex.incomeStatement;
+            const utilidadBruta = is.ventas - is.costoVentas;
+            const totalGastos = is.gastosOp + is.otrosGastos;
+            const utilidadNeta = utilidadBruta - totalGastos;
+
+            resBody.innerHTML = `
+                <div class="flex justify-between font-semibold py-1 border-b text-xs">
+                    <span>Ventas Netas</span>
+                    <span class="font-mono">${formatMoney(is.ventas)}</span>
+                </div>
+                <div class="flex justify-between py-1 text-slate-600 text-xs">
+                    <span>(-) Costo de Ventas</span>
+                    <span class="font-mono">(${formatMoney(is.costoVentas)})</span>
+                </div>
+                <div class="flex justify-between font-bold py-2 border-y bg-slate-50 text-indigo-900 text-xs">
+                    <span>= Utilidad Bruta</span>
+                    <span class="font-mono">${formatMoney(utilidadBruta)}</span>
+                </div>
+                <div class="flex justify-between py-1 text-slate-600 text-xs">
+                    <span>(-) Gastos de Operación</span>
+                    <span class="font-mono">(${formatMoney(is.gastosOp)})</span>
+                </div>
+                <div class="flex justify-between font-bold py-3 mt-2 border-t-2 border-indigo-900 text-sm text-indigo-900 bg-indigo-50/50 px-3 rounded-lg">
+                    <span>= Utilidad del Ejercicio</span>
+                    <span class="font-mono">${formatMoney(utilidadNeta)}</span>
+                </div>
+            `;
+
+            document.getElementById('company-name-bal').innerText = ex.company;
+            const bs = ex.balanceSheet;
+            const actCircTotal = bs.activosCirculantes.reduce((acc, curr) => acc + curr.amount, 0);
+            const actNoCircTotal = bs.activosNoCirculantes.reduce((acc, curr) => acc + curr.amount, 0);
+            const activoTotal = actCircTotal + actNoCircTotal;
+            const pasivoTotal = bs.pasivosCortoPlazo.reduce((acc, curr) => acc + curr.amount, 0);
+            const capitalTotal = bs.capitalContable.reduce((acc, curr) => acc + curr.amount, 0);
+
+            const actContainer = document.getElementById('balance-activo');
+            actContainer.innerHTML = `
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Activo Circulante</div>
+                ${bs.activosCirculantes.map((a) => `<div class="flex justify-between items-center py-1 text-xs"><span class="text-slate-600">${a.name}</span> <span class="font-mono">${formatMoney(a.amount)}</span></div>`).join('')}
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-4 mb-1">Activo No Circulante</div>
+                ${bs.activosNoCirculantes.map((a) => `<div class="flex justify-between items-center py-1 text-xs"><span class="text-slate-600">${a.name}</span> <span class="font-mono">${formatMoney(a.amount)}</span></div>`).join('')}
+                <div class="flex justify-between font-bold py-3 mt-4 border-t-2 border-indigo-900 bg-indigo-50/50 px-3 rounded-lg text-indigo-900 text-xs">
+                    <span>TOTAL ACTIVO</span>
+                    <span class="font-mono">${formatMoney(activoTotal)}</span>
+                </div>
+            `;
+
+            const pasContainer = document.getElementById('balance-pasivo');
+            pasContainer.innerHTML = `
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pasivo a Corto Plazo</div>
+                ${bs.pasivosCortoPlazo.length > 0 ? bs.pasivosCortoPlazo.map((p) => `<div class="flex justify-between items-center py-1 text-xs"><span class="text-slate-600">${p.name}</span> <span class="font-mono">${formatMoney(p.amount)}</span></div>`).join('') : '<div class="text-slate-400 italic text-xs">Sin pasivos registrados</div>'}
+                <div class="flex justify-between font-semibold py-1 border-t text-slate-800 text-xs">
+                    <span>Total Pasivo</span>
+                    <span class="font-mono">${formatMoney(pasivoTotal)}</span>
+                </div>
+            `;
+
+            const capContainer = document.getElementById('balance-capital');
+            capContainer.innerHTML = `
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Capital Contable</div>
+                ${bs.capitalContable.map((c) => `<div class="flex justify-between items-center py-1 text-xs"><span class="text-slate-600">${c.name}</span> <span class="font-mono">${formatMoney(c.amount)}</span></div>`).join('')}
+                <div class="flex justify-between font-bold py-3 mt-4 border-t-2 border-indigo-900 bg-indigo-50/50 px-3 rounded-lg text-indigo-900 text-xs">
+                    <span>TOTAL PASIVO + CAPITAL</span>
+                    <span class="font-mono">${formatMoney(pasivoTotal + capitalTotal)}</span>
+                </div>
+            `;
+            
+            document.getElementById('feedback-result').classList.add('hidden');
+        }
+
+        function checkUserAnswers() {
+            const feedbackEl = document.getElementById('feedback-result');
+            feedbackEl.classList.remove('hidden');
+            feedbackEl.className = "mt-4 p-4 rounded-xl text-center font-bold text-sm bg-emerald-100 text-emerald-800 border border-emerald-200";
+            feedbackEl.innerHTML = "🎉 ¡Excelente! Se han validado tus datos ingresados. ¡Estás lista para tu examen de finanzas!";
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserProgress();
+            lucide.createIcons();
+            renderExerciseList();
+            loadCurrentExercise();
+            // Refrescar visibilidad del bloque de estudio según el modo cargado
+            if (currentMode !== 'estudio') {
+                document.getElementById('study-notes-section').classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
